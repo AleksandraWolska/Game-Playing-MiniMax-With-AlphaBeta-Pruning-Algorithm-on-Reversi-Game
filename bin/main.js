@@ -58,13 +58,13 @@ function getCLIBoardInput() {
 //                 console.log(inputString)
 //                 const game = new Reversi(inputString);
 //                 const time1 = Date.now()
-//                 const simulation_result = game.playSimulation(3);
+//                 const simulation_result = game.playSimulation(6);
 //                 const time2 = Date.now()
 //                 console.log(`\nFinal board after ${simulation_result[0]} rounds (player ${simulation_result[1]} wins) in ${time2 - time1}:`);
 //             } else if (mode == "1") {
 //                 const game = new Reversi();
 //                 const time1 = Date.now()
-//                 const simulation_result = game.playSimulation(3);
+//                 const simulation_result = game.playSimulation(6);
 //                 const time2 = Date.now()
 //                 console.log(`\nFinal board after ${simulation_result[0]} rounds (player ${simulation_result[1]} wins) in ${time2 - time1}:`);
 //             }
@@ -75,35 +75,39 @@ function getCLIBoardInput() {
 // }
 function interactive() {
     return __awaiter(this, void 0, void 0, function* () {
-        while (true) {
-            try {
-                console.log("REVERSI GAME:");
-                let mode = yield getUserInput("1 - ustawienie początkowe\n2-wprowadź tablicę");
-                if (mode == "2") {
-                    console.log("Podaj tablicę");
-                    let inputString = yield getCLIBoardInput();
-                    console.log("input stringL");
-                    console.log(inputString);
-                    const game = new ReversiOptimized_1.default(inputString);
-                    const time1 = Date.now();
-                    const simulation_result = game.playSimulation(6);
-                    const time2 = Date.now();
-                    console.log(`\nFinal board after ${simulation_result[0]} rounds (player ${simulation_result[1]} wins) in ${time2 - time1}:`);
-                }
-                else if (mode == "1") {
-                    const game = new ReversiOptimized_1.default();
-                    const time1 = Date.now();
-                    const simulation_result = game.playSimulation(6);
-                    const time2 = Date.now();
-                    console.log(`\nFinal board after ${simulation_result[0]} rounds (player ${simulation_result[1]} wins) in ${time2 - time1}:`);
-                }
+        // while (true) {
+        try {
+            console.log("REVERSI GAME:");
+            let mode = yield getUserInput("1 - ustawienie początkowe\n2-wprowadź tablicę");
+            if (mode == "2") {
+                console.log("Podaj tablicę");
+                let inputString = yield getCLIBoardInput();
+                console.log("input stringL");
+                console.log(inputString);
+                const game = new ReversiOptimized_1.default(inputString);
+                //game.minimax(6, -Infinity, Infinity, true);
+                const time1 = Date.now();
+                const simulation_result = game.playSimulation(7);
+                const time2 = Date.now();
+                console.log(`\nFinal board after ${simulation_result[0]} rounds (player ${simulation_result[1]} wins) in ${time2 - time1}:`);
             }
-            catch (e) {
-                console.error(e.message);
+            else if (mode == "1") {
+                const game = new ReversiOptimized_1.default();
+                game.minimax(8, -Infinity, Infinity, true, ReversiOptimized_1.default.minimaxTreeRoot);
+                //game.minimax(6, -Infinity, Infinity, true);
+                console.log("stworzone");
+                const time1 = Date.now();
+                const simulation_result = game.playSimulation(8);
+                const time2 = Date.now();
+                console.log(`\nFinal board after ${simulation_result[0]} rounds (player ${simulation_result[1]} wins) in ${time2 - time1}:`);
             }
+        }
+        catch (e) {
+            console.error(e.message);
         }
     });
 }
+//}
 function main() {
     return __awaiter(this, void 0, void 0, function* () {
         interactive();

@@ -15,9 +15,21 @@ const heuristic = {
 
 const HEURISTIC = heuristic.PIECES_AMOUNT
 
+
+
+
+class MinimaxNode {
+    children: Map<string, MinimaxNode>;
+    value: number | null;
+  
+    constructor() {
+      this.children = new Map<string, MinimaxNode>();
+      this.value = null;
+    }
+  }
 export default class ReversiOptimized {
 
-    minimaxTree: Map<string, number>;
+    static minimaxTreeRoot = new MinimaxNode();
     board: Board;
     currentPlayer: number;
     directions: number[][];
@@ -34,7 +46,7 @@ export default class ReversiOptimized {
         } else {
             this.board = inputBoard
         }
-        this.minimaxTree = new Map<string, number>();
+
 
         this.currentPlayer = 1;
         // Ustawienie kierunków do sprawdzania ruchów w grze
@@ -188,71 +200,67 @@ export default class ReversiOptimized {
 
 
     // Implementacja algorytmu minimax z alfa-beta przycinaniem:
-    minimax(depth: number, alpha: number, beta: number, maximizingPlayer: boolean): number {
-
-        const key = `${this.board.toString()}_${depth}_${maximizingPlayer}`;
-        if (this.minimaxTree.has(key)) {
-            return this.minimaxTree.get(key) as number;
-        }
+    minimax(depth: number, alpha: number, beta: number, maximizingPlayer: boolean, node: MinimaxNode): number {
         if (depth === 0 || this.isGameOver()) {
-            return this.evaluate(); // return heuristic evaluation for the current game state
+          node.value = this.evaluate(); // return heuristic evaluation for the current game state
+          return node.value;
         }
-
+      
         if (maximizingPlayer) {
-            let maxEval = -Infinity;
-            for (let row = 0; row < 8; row++) {
-                for (let col = 0; col < 8; col++) {
-                    if (this.isValidMove(row, col)) {
-                        const clonedReversi = this.clone();
-                        clonedReversi.makeMove(row, col);
-                        const evalValue = clonedReversi.minimax(depth - 1, alpha, beta, false);
-                        maxEval = Math.max(maxEval, evalValue);
-                        alpha = Math.max(alpha, evalValue);
-                        if (beta <= alpha) {
-                            break;
-                        }
-                    }
+          let maxEval = -Infinity;
+          for (let row = 0; row < 8; row++) {
+            for (let col = 0; col < 8; col++) {
+              if (this.isValidMove(row, col)) {
+                const clonedReversi = this.clone();
+                clonedReversi.makeMove(row, col);
+                const childNode = new MinimaxNode();
+                const childKey = `${row},${col}`;
+                node.children.set(childKey, childNode);
+                const evalValue = clonedReversi.minimax(depth - 1, alpha, beta, false, childNode);
+                maxEval = Math.max(maxEval, evalValue);
+                alpha = Math.max(alpha, evalValue);
+                if (beta <= alpha) {
+                  break;
                 }
+              }
             }
-            this.minimaxTree.set(key, maxEval);
-            return maxEval;
+          }
+          node.value = maxEval;
+          return maxEval;
         } else {
-            let minEval = Infinity;
-            for (let row = 0; row < 8; row++) {
-                for (let col = 0; col < 8; col++) {
-                    if (this.isValidMove(row, col)) {
-                        const newReversi = this.clone();
-                        newReversi.makeMove(row, col);
-                        const evalValue = newReversi.minimax(depth - 1, alpha, beta, true);
-                        minEval = Math.min(minEval, evalValue);
-                        beta = Math.min(beta, evalValue);
-                        if (beta <= alpha) {
-                            break;
-                        }
-                    }
+          let minEval = Infinity;
+          for (let row = 0; row < 8; row++) {
+            for (let col = 0; col < 8; col++) {
+              if (this.isValidMove(row, col)) {
+                const newReversi = this.clone();
+                newReversi.makeMove(row, col);
+                const childNode = new MinimaxNode();
+                const childKey = `${row},${col}`;
+                node.children.set(childKey, childNode);
+                const evalValue = newReversi.minimax(depth - 1, alpha, beta, true, childNode);
+                minEval = Math.min(minEval, evalValue);
+                beta = Math.min(beta, evalValue);
+                if (beta <= alpha) {
+                  break;
                 }
+              }
             }
-            this.minimaxTree.set(key, minEval);
-            return minEval;
+          }
+          node.value = minEval;
+          return minEval;
         }
-    }
+      }
+      
 
-    findBestMove(depth: number): [number, number] | null {
+      findBestMove(node: MinimaxNode): [number, number] | null {
         let bestEval = -Infinity;
         let bestMove: [number, number] | null = null;
-        for (let row = 0; row < 8; row++) {
-            for (let col = 0; col < 8; col++) {
-                if (this.isValidMove(row, col)) {
-                    const clonedReversi = this.clone();
-                    clonedReversi.makeMove(row, col);
-                    const evalValue = clonedReversi.minimax(depth - 1, -Infinity, Infinity, false);
-                    if (evalValue > bestEval) {
-                        bestEval = evalValue;
-                        bestMove = [row, col];
-                    }
-                }
+        node.children.forEach((childNode, key) => {
+            if (childNode.value !== null && childNode.value > bestEval) {
+                bestEval = childNode.value;
+                bestMove = key.split(',').map(Number) as [number, number];
             }
-        }
+        });
         return bestMove;
     }
 
@@ -324,12 +332,14 @@ export default class ReversiOptimized {
     playSimulation(depth: number): [number, number] {
         let round = 0;
         while (!this.isGameOver()) {
-            const move = this.findBestMove(depth);
+            const root = new MinimaxNode();
+            this.minimax(depth, -Infinity, Infinity, true, root);
+            const move = this.findBestMove(root);
             if (move) {
                 this.makeMove(move[0], move[1]);
                 round++;
-                console.log(`ROUND: ${round}, TURN: player ${this.currentPlayer}`)
-                this.printBoard()
+                console.log(`ROUND: ${round}, TURN: player ${this.currentPlayer}`);
+                this.printBoard();
             } else {
                 this.switchPlayer();
             }
@@ -344,3 +354,4 @@ export default class ReversiOptimized {
     }
 
 }
+

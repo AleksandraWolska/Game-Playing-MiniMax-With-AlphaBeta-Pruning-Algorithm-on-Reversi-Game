@@ -55,7 +55,7 @@ async function getCLIBoardInput(): Promise<string> {
 
 //                 const game = new Reversi(inputString);
 //                 const time1 = Date.now()
-//                 const simulation_result = game.playSimulation(3);
+//                 const simulation_result = game.playSimulation(6);
 //                 const time2 = Date.now()
 //                 console.log(`\nFinal board after ${simulation_result[0]} rounds (player ${simulation_result[1]} wins) in ${time2 - time1}:`);
 
@@ -63,7 +63,7 @@ async function getCLIBoardInput(): Promise<string> {
 
 //                 const game = new Reversi();
 //                 const time1 = Date.now()
-//                 const simulation_result = game.playSimulation(3);
+//                 const simulation_result = game.playSimulation(6);
 //                 const time2 = Date.now()
 //                 console.log(`\nFinal board after ${simulation_result[0]} rounds (player ${simulation_result[1]} wins) in ${time2 - time1}:`);
 
@@ -77,7 +77,7 @@ async function getCLIBoardInput(): Promise<string> {
 
 
 async function interactive(): Promise<void> {
-    while (true) {
+   // while (true) {
         try {
             console.log("REVERSI GAME:");
 
@@ -90,16 +90,20 @@ async function interactive(): Promise<void> {
                 console.log(inputString)
 
                 const game = new ReversiOptimized(inputString);
+                //game.minimax(6, -Infinity, Infinity, true);
                 const time1 = Date.now()
-                const simulation_result = game.playSimulation(6);
+                const simulation_result = game.playSimulation(7);
                 const time2 = Date.now()
                 console.log(`\nFinal board after ${simulation_result[0]} rounds (player ${simulation_result[1]} wins) in ${time2 - time1}:`);
 
             } else if (mode == "1") {
 
                 const game = new ReversiOptimized();
+                game.minimax(8, -Infinity, Infinity, true, ReversiOptimized.minimaxTreeRoot);
+                //game.minimax(6, -Infinity, Infinity, true);
+                console.log("stworzone")
                 const time1 = Date.now()
-                const simulation_result = game.playSimulation(6);
+                const simulation_result = game.playSimulation(8);
                 const time2 = Date.now()
                 console.log(`\nFinal board after ${simulation_result[0]} rounds (player ${simulation_result[1]} wins) in ${time2 - time1}:`);
 
@@ -109,7 +113,7 @@ async function interactive(): Promise<void> {
             console.error(e.message)
         }
 }
-}
+//}
 
 
 

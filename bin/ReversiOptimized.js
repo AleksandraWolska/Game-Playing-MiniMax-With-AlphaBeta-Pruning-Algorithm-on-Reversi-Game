@@ -12,6 +12,12 @@ const heuristic = {
     AVAILABLE_MOVES_AMOUNT: "available_moves_amount",
 };
 const HEURISTIC = heuristic.PIECES_AMOUNT;
+class MinimaxNode {
+    constructor() {
+        this.children = new Map();
+        this.value = null;
+    }
+}
 class ReversiOptimized {
     // Inicjalizacja pustej planszy lub planszy z istniejącego ciągu znaków / tablicy
     constructor(inputBoard) {
@@ -25,7 +31,6 @@ class ReversiOptimized {
         else {
             this.board = inputBoard;
         }
-        this.minimaxTree = new Map();
         this.currentPlayer = 1;
         // Ustawienie kierunków do sprawdzania ruchów w grze
         //this.directions = 
@@ -148,13 +153,10 @@ class ReversiOptimized {
         return count1 > count2 ? 1 : count1 < count2 ? 2 : 0;
     }
     // Implementacja algorytmu minimax z alfa-beta przycinaniem:
-    minimax(depth, alpha, beta, maximizingPlayer) {
-        const key = `${this.board.toString()}_${depth}_${maximizingPlayer}`;
-        if (this.minimaxTree.has(key)) {
-            return this.minimaxTree.get(key);
-        }
+    minimax(depth, alpha, beta, maximizingPlayer, node) {
         if (depth === 0 || this.isGameOver()) {
-            return this.evaluate(); // return heuristic evaluation for the current game state
+            node.value = this.evaluate(); // return heuristic evaluation for the current game state
+            return node.value;
         }
         if (maximizingPlayer) {
             let maxEval = -Infinity;
@@ -163,7 +165,10 @@ class ReversiOptimized {
                     if (this.isValidMove(row, col)) {
                         const clonedReversi = this.clone();
                         clonedReversi.makeMove(row, col);
-                        const evalValue = clonedReversi.minimax(depth - 1, alpha, beta, false);
+                        const childNode = new MinimaxNode();
+                        const childKey = `${row},${col}`;
+                        node.children.set(childKey, childNode);
+                        const evalValue = clonedReversi.minimax(depth - 1, alpha, beta, false, childNode);
                         maxEval = Math.max(maxEval, evalValue);
                         alpha = Math.max(alpha, evalValue);
                         if (beta <= alpha) {
@@ -172,7 +177,7 @@ class ReversiOptimized {
                     }
                 }
             }
-            this.minimaxTree.set(key, maxEval);
+            node.value = maxEval;
             return maxEval;
         }
         else {
@@ -182,7 +187,10 @@ class ReversiOptimized {
                     if (this.isValidMove(row, col)) {
                         const newReversi = this.clone();
                         newReversi.makeMove(row, col);
-                        const evalValue = newReversi.minimax(depth - 1, alpha, beta, true);
+                        const childNode = new MinimaxNode();
+                        const childKey = `${row},${col}`;
+                        node.children.set(childKey, childNode);
+                        const evalValue = newReversi.minimax(depth - 1, alpha, beta, true, childNode);
                         minEval = Math.min(minEval, evalValue);
                         beta = Math.min(beta, evalValue);
                         if (beta <= alpha) {
@@ -191,26 +199,19 @@ class ReversiOptimized {
                     }
                 }
             }
-            this.minimaxTree.set(key, minEval);
+            node.value = minEval;
             return minEval;
         }
     }
-    findBestMove(depth) {
+    findBestMove(node) {
         let bestEval = -Infinity;
         let bestMove = null;
-        for (let row = 0; row < 8; row++) {
-            for (let col = 0; col < 8; col++) {
-                if (this.isValidMove(row, col)) {
-                    const clonedReversi = this.clone();
-                    clonedReversi.makeMove(row, col);
-                    const evalValue = clonedReversi.minimax(depth - 1, -Infinity, Infinity, false);
-                    if (evalValue > bestEval) {
-                        bestEval = evalValue;
-                        bestMove = [row, col];
-                    }
-                }
+        node.children.forEach((childNode, key) => {
+            if (childNode.value !== null && childNode.value > bestEval) {
+                bestEval = childNode.value;
+                bestMove = key.split(',').map(Number);
             }
-        }
+        });
         return bestMove;
     }
     //Ocena heurystyczna dla bieżącego stanu gry:
@@ -268,7 +269,9 @@ class ReversiOptimized {
     playSimulation(depth) {
         let round = 0;
         while (!this.isGameOver()) {
-            const move = this.findBestMove(depth);
+            const root = new MinimaxNode();
+            this.minimax(depth, -Infinity, Infinity, true, root);
+            const move = this.findBestMove(root);
             if (move) {
                 this.makeMove(move[0], move[1]);
                 round++;
@@ -288,4 +291,5 @@ class ReversiOptimized {
             console.log(row.join(' '));
     }
 }
+ReversiOptimized.minimaxTreeRoot = new MinimaxNode();
 exports.default = ReversiOptimized;
