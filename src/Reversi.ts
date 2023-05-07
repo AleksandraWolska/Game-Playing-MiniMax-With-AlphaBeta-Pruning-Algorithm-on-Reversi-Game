@@ -2,12 +2,12 @@ type Board = number[][];
 
 // Ustawienie kierunków do sprawdzania ruchów w grze
 const DIRECTIONS = [
-            [-1, -1], [-1, 0], [-1, 1],
-            [0, -1], [0, 1],
-            [1, -1], [1, 0], [1, 1]
-        ];
+    [-1, -1], [-1, 0], [-1, 1],
+    [0, -1], [0, 1],
+    [1, -1], [1, 0], [1, 1]
+];
 
-const  heuristic = {
+const heuristic = {
     PIECES_AMOUNT: "pieces_amount",
     CORNER_AMOUNT: "corners_amount",
     AVAILABLE_MOVES_AMOUNT: "available_moves_amount",
@@ -21,7 +21,7 @@ export default class Reversi {
     directions: number[][];
 
 
-// Inicjalizacja pustej planszy lub planszy z istniejącego ciągu znaków / tablicy
+    // Inicjalizacja pustej planszy lub planszy z istniejącego ciągu znaków / tablicy
     constructor(inputBoard?: string | Board) {
 
         if (!inputBoard) {
@@ -175,7 +175,7 @@ export default class Reversi {
 
     getWinner(): number | null {
         if (!this.isGameOver()) return null;
-   
+
         const count1 = this.countPieces(1);
         const count2 = this.countPieces(2);
 
@@ -184,21 +184,21 @@ export default class Reversi {
     }
 
 
-   // Implementacja algorytmu minimax z alfa-beta przycinaniem:
+    // Implementacja algorytmu minimax z alfa-beta przycinaniem:
     minimax(depth: number, alpha: number, beta: number, maximizingPlayer: boolean): number {
         if (depth === 0 || this.isGameOver()) {
             return this.evaluate(); // return heuristic evaluation for the current game state
         }
 
         if (maximizingPlayer) {
-            let maxEval = -Infinity;
+            let maxEvalAlpha = -Infinity;
             for (let row = 0; row < 8; row++) {
                 for (let col = 0; col < 8; col++) {
                     if (this.isValidMove(row, col)) {
                         const clonedReversi = this.clone();
                         clonedReversi.makeMove(row, col);
                         const evalValue = clonedReversi.minimax(depth - 1, alpha, beta, false);
-                        maxEval = Math.max(maxEval, evalValue);
+                        maxEvalAlpha = Math.max(maxEvalAlpha, evalValue);
                         alpha = Math.max(alpha, evalValue);
                         if (beta <= alpha) {
                             break;
@@ -206,16 +206,16 @@ export default class Reversi {
                     }
                 }
             }
-            return maxEval;
+            return maxEvalAlpha;
         } else {
-            let minEval = Infinity;
+            let minEvalBeta = Infinity;
             for (let row = 0; row < 8; row++) {
                 for (let col = 0; col < 8; col++) {
                     if (this.isValidMove(row, col)) {
                         const newReversi = this.clone();
                         newReversi.makeMove(row, col);
                         const evalValue = newReversi.minimax(depth - 1, alpha, beta, true);
-                        minEval = Math.min(minEval, evalValue);
+                        minEvalBeta = Math.min(minEvalBeta, evalValue);
                         beta = Math.min(beta, evalValue);
                         if (beta <= alpha) {
                             break;
@@ -223,7 +223,7 @@ export default class Reversi {
                     }
                 }
             }
-            return minEval;
+            return minEvalBeta;
         }
     }
 
@@ -256,35 +256,35 @@ export default class Reversi {
     }
 
 
-    evaluatePiecesAmount() : number {
+    evaluatePiecesAmount(): number {
         const count1 = this.countPieces(1);
         const count2 = this.countPieces(2);
         return count1 - count2;
     }
 
-    evaluateCornersAmount() : number {
+    evaluateCornersAmount(): number {
 
         let cornerScore = 0;
-    const cornerPositions = [
-        [0, 0],
-        [0, 7],
-        [7, 0],
-        [7, 7]
-    ];
+        const cornerPositions = [
+            [0, 0],
+            [0, 7],
+            [7, 0],
+            [7, 7]
+        ];
 
-    for (const position of cornerPositions) {
-        if (this.board[position[0]][position[1]] === this.currentPlayer) {
-            cornerScore++;
-        } else if (this.board[position[0]][position[1]] === 3 - this.currentPlayer) {
-            cornerScore--;
+        for (const position of cornerPositions) {
+            if (this.board[position[0]][position[1]] === this.currentPlayer) {
+                cornerScore++;
+            } else if (this.board[position[0]][position[1]] === 3 - this.currentPlayer) {
+                cornerScore--;
+            }
         }
+
+        return cornerScore;
     }
 
-    return cornerScore;
-    }
 
-
-    evaluateAvailableMovesAmount() : number {
+    evaluateAvailableMovesAmount(): number {
 
         let availableMoves = 0;
 
@@ -295,12 +295,12 @@ export default class Reversi {
                 }
             }
         }
-    
+
         return availableMoves;
     }
 
 
-    clone(): Reversi  {
+    clone(): Reversi {
         const clonedReversi = new Reversi(JSON.parse(JSON.stringify(this.board)));
         clonedReversi.currentPlayer = this.currentPlayer;
         return clonedReversi;

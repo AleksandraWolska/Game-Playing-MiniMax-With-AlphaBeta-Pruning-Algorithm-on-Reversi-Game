@@ -152,14 +152,14 @@ class Reversi {
             return this.evaluate(); // return heuristic evaluation for the current game state
         }
         if (maximizingPlayer) {
-            let maxEval = -Infinity;
+            let maxEvalAlpha = -Infinity;
             for (let row = 0; row < 8; row++) {
                 for (let col = 0; col < 8; col++) {
                     if (this.isValidMove(row, col)) {
                         const clonedReversi = this.clone();
                         clonedReversi.makeMove(row, col);
                         const evalValue = clonedReversi.minimax(depth - 1, alpha, beta, false);
-                        maxEval = Math.max(maxEval, evalValue);
+                        maxEvalAlpha = Math.max(maxEvalAlpha, evalValue);
                         alpha = Math.max(alpha, evalValue);
                         if (beta <= alpha) {
                             break;
@@ -167,17 +167,17 @@ class Reversi {
                     }
                 }
             }
-            return maxEval;
+            return maxEvalAlpha;
         }
         else {
-            let minEval = Infinity;
+            let minEvalBeta = Infinity;
             for (let row = 0; row < 8; row++) {
                 for (let col = 0; col < 8; col++) {
                     if (this.isValidMove(row, col)) {
                         const newReversi = this.clone();
                         newReversi.makeMove(row, col);
                         const evalValue = newReversi.minimax(depth - 1, alpha, beta, true);
-                        minEval = Math.min(minEval, evalValue);
+                        minEvalBeta = Math.min(minEvalBeta, evalValue);
                         beta = Math.min(beta, evalValue);
                         if (beta <= alpha) {
                             break;
@@ -185,7 +185,7 @@ class Reversi {
                     }
                 }
             }
-            return minEval;
+            return minEvalBeta;
         }
     }
     findBestMove(depth) {
