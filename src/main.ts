@@ -54,7 +54,7 @@ async function interactive(): Promise<void> {
 
                 const game = new Reversi(inputString);
                 const time1 = Date.now()
-                const simulation_result = game.playSimulation(5);
+                const simulation_result = game.playSimulation(3);
                 const time2 = Date.now()
                 console.log(`\nFinal board after ${simulation_result[0]} rounds (player ${simulation_result[1]} wins) in ${time2 - time1}:`);
 
@@ -62,7 +62,7 @@ async function interactive(): Promise<void> {
 
                 const game = new Reversi();
                 const time1 = Date.now()
-                const simulation_result = game.playSimulation(5);
+                const simulation_result = game.playSimulation(3);
                 const time2 = Date.now()
                 console.log(`\nFinal board after ${simulation_result[0]} rounds (player ${simulation_result[1]} wins) in ${time2 - time1}:`);
 

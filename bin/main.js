@@ -59,14 +59,14 @@ function interactive() {
                     console.log(inputString);
                     const game = new Reversi_1.default(inputString);
                     const time1 = Date.now();
-                    const simulation_result = game.playSimulation(5);
+                    const simulation_result = game.playSimulation(3);
                     const time2 = Date.now();
                     console.log(`\nFinal board after ${simulation_result[0]} rounds (player ${simulation_result[1]} wins) in ${time2 - time1}:`);
                 }
                 else if (mode == "1") {
                     const game = new Reversi_1.default();
                     const time1 = Date.now();
-                    const simulation_result = game.playSimulation(5);
+                    const simulation_result = game.playSimulation(3);
                     const time2 = Date.now();
                     console.log(`\nFinal board after ${simulation_result[0]} rounds (player ${simulation_result[1]} wins) in ${time2 - time1}:`);
                 }
