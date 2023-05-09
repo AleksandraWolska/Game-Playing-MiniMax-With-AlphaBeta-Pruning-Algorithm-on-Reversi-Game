@@ -22,8 +22,7 @@ class MinimaxNode {
 exports.MinimaxNode = MinimaxNode;
 class ReversiSingleTree {
     // Inicjalizacja pustej planszy lub planszy z istniejącego ciągu znaków / tablicy
-    constructor(minimaxTreeRoot, heuristic, inputBoard) {
-        this.minimaxTreeRoot = minimaxTreeRoot;
+    constructor(heuristic, inputBoard) {
         if (!inputBoard) {
             this.board = this.createEmptyBoard();
             this.initializeBoard();
@@ -60,9 +59,12 @@ class ReversiSingleTree {
         return this.board.flatMap(row => row).join('');
     }
     buildMinimaxTree(depth) {
-        const root = new MinimaxNode();
-        this.minimax(depth, -Infinity, Infinity, true, root);
-        return root;
+        if (ReversiSingleTree.minimaxTreeRoot === null) {
+            ReversiSingleTree.minimaxTreeRoot = new MinimaxNode();
+            console.log("nowe drzewo");
+        }
+        this.minimax(depth, -Infinity, Infinity, true, ReversiSingleTree.minimaxTreeRoot);
+        return ReversiSingleTree.minimaxTreeRoot;
     }
     //Sprawdzenie czy pozycja (wiersz, kolumna) znajduje się na planszy
     isOnBoard(row, col) {
@@ -214,14 +216,17 @@ class ReversiSingleTree {
         }
     }
     findBestMove(node) {
-        let bestEval = -Infinity;
+        let bestEval = this.currentPlayer === 1 ? -Infinity : Infinity;
         let bestMove = null;
         const currentBoardHash = this.hashBoardState();
         node.children.forEach((childNode, key) => {
             const [row, col, boardHash] = key.split(',');
-            if (boardHash === currentBoardHash && childNode.value !== null && childNode.value > bestEval) {
-                bestEval = childNode.value;
-                bestMove = [parseInt(row), parseInt(col)];
+            if (boardHash === currentBoardHash && childNode.value !== null) {
+                if ((this.currentPlayer === 1 && childNode.value > bestEval) ||
+                    (this.currentPlayer === 2 && childNode.value < bestEval)) {
+                    bestEval = childNode.value;
+                    bestMove = [parseInt(row), parseInt(col)];
+                }
             }
         });
         return bestMove;
@@ -234,6 +239,7 @@ class ReversiSingleTree {
             return this.evaluateCornersAmount();
         if (this.heuristic == "available_moves_amount")
             return this.evaluateAvailableMovesAmount();
+        throw new Error("Invalid heuristic");
     }
     evaluatePiecesAmount() {
         const count1 = this.countPieces(1);
@@ -270,7 +276,7 @@ class ReversiSingleTree {
         return availableMoves;
     }
     clone() {
-        const clonedReversi = new ReversiSingleTree(this.minimaxTreeRoot, this.heuristic, JSON.parse(JSON.stringify(this.board)));
+        const clonedReversi = new ReversiSingleTree(this.heuristic, JSON.parse(JSON.stringify(this.board)));
         clonedReversi.currentPlayer = this.currentPlayer;
         return clonedReversi;
     }
@@ -281,11 +287,11 @@ class ReversiSingleTree {
     // playSimulation method
     playSimulation(depth) {
         let round = 0;
+        ReversiSingleTree.minimaxTreeRoot = new MinimaxNode();
         while (!this.isGameOver()) {
-            const root = this.buildMinimaxTree(depth);
-            // Build the minimax tree for the current player
+            this.buildMinimaxTree(depth);
             // Use the minimax tree to find the best move
-            const move = this.findBestMove(root);
+            const move = this.findBestMove(ReversiSingleTree.minimaxTreeRoot);
             if (move) {
                 this.makeMove(move[0], move[1]);
                 round++;
@@ -305,4 +311,5 @@ class ReversiSingleTree {
             console.log(row.join(' '));
     }
 }
+ReversiSingleTree.minimaxTreeRoot = null;
 exports.default = ReversiSingleTree;

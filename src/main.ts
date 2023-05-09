@@ -101,8 +101,8 @@ async function interactive(): Promise<void> {
 
         if (mode == "1") {
             const timeBuild1 = Date.now();
-            const minimaxTreeRoot = new MinimaxNode();
-            const game = new ReversiSingleTree(minimaxTreeRoot, heuristic);
+            //const minimaxTreeRoot = new MinimaxNode();
+            const game = new ReversiSingleTree(heuristic);
             //const root = game.buildMinimaxTree(13);
             const timeBuild2 = Date.now();
 
@@ -124,8 +124,8 @@ async function interactive(): Promise<void> {
 
     
             const timeBuild1 = Date.now();
-            const minimaxTreeRoot = new MinimaxNode();
-            const game = new ReversiSingleTree(minimaxTreeRoot, inputString);
+            //const minimaxTreeRoot = new MinimaxNode();
+            const game = new ReversiSingleTree(inputString);
             //const root = game.buildMinimaxTree(13);
             const timeBuild2 = Date.now();
 
