@@ -1,23 +1,26 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.MinimaxNode = void 0;
 // Ustawienie kierunków do sprawdzania ruchów w grze
 const DIRECTIONS = [
     [-1, -1], [-1, 0], [-1, 1],
     [0, -1], [0, 1],
     [1, -1], [1, 0], [1, 1]
 ];
-// Klasa reprezentująca węzeł w drzewie minimax
+const heuristic = {
+    PIECES_AMOUNT: "pieces_amount",
+    CORNER_AMOUNT: "corners_amount",
+    AVAILABLE_MOVES_AMOUNT: "available_moves_amount",
+};
+const HEURISTIC = heuristic.PIECES_AMOUNT;
 class MinimaxNode {
     constructor() {
         this.children = new Map();
         this.value = null;
     }
 }
-exports.MinimaxNode = MinimaxNode;
-class ReversiSingleTree {
+class ReversiOptimized {
     // Inicjalizacja pustej planszy lub planszy z istniejącego ciągu znaków / tablicy
-    constructor(heuristic, inputBoard) {
+    constructor(inputBoard) {
         if (!inputBoard) {
             this.board = this.createEmptyBoard();
             this.initializeBoard();
@@ -28,11 +31,22 @@ class ReversiSingleTree {
         else {
             this.board = inputBoard;
         }
-        this.heuristic = heuristic;
         this.currentPlayer = 1;
+        // Ustawienie kierunków do sprawdzania ruchów w grze
+        //this.directions = 
     }
     createEmptyBoard() {
         return new Array(8).fill(null).map(() => new Array(8).fill(0));
+    }
+    hashBoardState() {
+        return this.board.flatMap(row => row).join('');
+        // let hash = 0, i, chr;
+        // for (i = 0; i < boardStr.length; i++) {
+        //     chr = boardStr.charCodeAt(i);
+        //     hash = ((hash << 5) - hash) + chr;
+        //     hash |= 0; // Convert to 32bit integer
+        // }
+        // return hash.toString();
     }
     initializeBoard() {
         this.board[3][3] = 1;
@@ -50,44 +64,29 @@ class ReversiSingleTree {
         }
         return board;
     }
-    // Generowanie hasha stanu planszy
-    hashBoardState() {
-        return this.board.flatMap(row => row).join('');
-    }
-    // Budowanie drzewa minimax
-    buildMinimaxTree(depth) {
-        if (ReversiSingleTree.minimaxTreeRoot === null) {
-            ReversiSingleTree.minimaxTreeRoot = new MinimaxNode();
-        }
-        this.minimax(depth, -Infinity, Infinity, true, ReversiSingleTree.minimaxTreeRoot);
-        return ReversiSingleTree.minimaxTreeRoot;
-    }
     //Sprawdzenie czy pozycja (wiersz, kolumna) znajduje się na planszy
     isOnBoard(row, col) {
         return row >= 0 && row < 8 && col >= 0 && col < 8;
     }
     //Sprawdzenie czy ruch jest dozwolony
     isValidMove(row, col) {
-        //sprawdzanie czy pole jest puste, jelsi nie to false
         if (this.board[row][col] !== 0) {
             return false;
         }
-        // Przeszukanie wszystkich mozliwych kierunków
         for (const direction of DIRECTIONS) {
             const newRow = row + direction[0];
             const newCol = col + direction[1];
-            // Jeśli pozycja jest na planszy i zawiera pionek przeciwnika
             if (this.isOnBoard(newRow, newCol) &&
                 this.board[newRow][newCol] === 3 - this.currentPlayer) {
                 let currentRow = newRow + direction[0];
                 let currentCol = newCol + direction[1];
-                // Przeszukaj w danym kierunku
                 while (this.isOnBoard(currentRow, currentCol)) {
-                    if (this.board[currentRow][currentCol] === 0)
+                    if (this.board[currentRow][currentCol] === 0) {
                         break;
-                    //jelsi znajdzie pionek obecnego gracza zwraca true
-                    if (this.board[currentRow][currentCol] === this.currentPlayer)
+                    }
+                    if (this.board[currentRow][currentCol] === this.currentPlayer) {
                         return true;
+                    }
                     currentRow += direction[0];
                     currentCol += direction[1];
                 }
@@ -98,19 +97,18 @@ class ReversiSingleTree {
     //Wykonanie ruchu na planszy:
     makeMove(row, col) {
         this.board[row][col] = this.currentPlayer;
-        // Sprawdzanie każdego kierunku w celu odwrócenia pionków przeciwnika
         for (const direction of DIRECTIONS) {
             const newRow = row + direction[0];
             const newCol = col + direction[1];
-            // Jeśli pozycja jest na planszy i zawiera pionek przeciwnika
             if (this.isOnBoard(newRow, newCol) &&
                 this.board[newRow][newCol] === 3 - this.currentPlayer) {
                 let currentRow = newRow + direction[0];
                 let currentCol = newCol + direction[1];
                 let toFlip = [[newRow, newCol]];
                 while (this.isOnBoard(currentRow, currentCol)) {
-                    if (this.board[currentRow][currentCol] === 0)
+                    if (this.board[currentRow][currentCol] === 0) {
                         break;
+                    }
                     if (this.board[currentRow][currentCol] === this.currentPlayer) {
                         for (const pos of toFlip) {
                             this.board[pos[0]][pos[1]] = this.currentPlayer;
@@ -129,16 +127,18 @@ class ReversiSingleTree {
     hasValidMoves() {
         for (let row = 0; row < 8; row++) {
             for (let col = 0; col < 8; col++) {
-                if (this.isValidMove(row, col))
+                if (this.isValidMove(row, col)) {
                     return true;
+                }
             }
         }
         return false;
     }
     isGameOver() {
         for (let player = 1; player <= 2; player++) {
-            if (this.hasValidMoves())
+            if (this.hasValidMoves()) {
                 return false;
+            }
             this.currentPlayer = 3 - this.currentPlayer;
         }
         return true;
@@ -148,8 +148,9 @@ class ReversiSingleTree {
         let count = 0;
         for (let row = 0; row < 8; row++) {
             for (let col = 0; col < 8; col++) {
-                if (this.board[row][col] === player)
+                if (this.board[row][col] === player) {
                     count++;
+                }
             }
         }
         return count;
@@ -174,14 +175,15 @@ class ReversiSingleTree {
                     if (this.isValidMove(row, col)) {
                         const clonedReversi = this.clone();
                         clonedReversi.makeMove(row, col);
+                        const childKey = `${row},${col}:${this.hashBoardState()}`;
                         const childNode = new MinimaxNode();
-                        const childKey = `${row},${col},${this.hashBoardState()}`;
                         node.children.set(childKey, childNode);
                         const evalValue = clonedReversi.minimax(depth - 1, alpha, beta, false, childNode);
                         maxEval = Math.max(maxEval, evalValue);
                         alpha = Math.max(alpha, evalValue);
-                        if (beta <= alpha)
+                        if (beta <= alpha) {
                             break;
+                        }
                     }
                 }
             }
@@ -195,14 +197,15 @@ class ReversiSingleTree {
                     if (this.isValidMove(row, col)) {
                         const newReversi = this.clone();
                         newReversi.makeMove(row, col);
+                        const childKey = `${row},${col}:${this.hashBoardState()}`;
                         const childNode = new MinimaxNode();
-                        const childKey = `${row},${col},${this.hashBoardState()}`;
                         node.children.set(childKey, childNode);
                         const evalValue = newReversi.minimax(depth - 1, alpha, beta, true, childNode);
                         minEval = Math.min(minEval, evalValue);
                         beta = Math.min(beta, evalValue);
-                        if (beta <= alpha)
+                        if (beta <= alpha) {
                             break;
+                        }
                     }
                 }
             }
@@ -211,30 +214,24 @@ class ReversiSingleTree {
         }
     }
     findBestMove(node) {
-        let bestEval = this.currentPlayer === 1 ? -Infinity : Infinity;
+        let bestEval = -Infinity;
         let bestMove = null;
-        const currentBoardHash = this.hashBoardState();
         node.children.forEach((childNode, key) => {
-            const [row, col, boardHash] = key.split(',');
-            if (boardHash === currentBoardHash && childNode.value !== null) {
-                if ((this.currentPlayer === 1 && childNode.value > bestEval) ||
-                    (this.currentPlayer === 2 && childNode.value < bestEval)) {
-                    bestEval = childNode.value;
-                    bestMove = [parseInt(row), parseInt(col)];
-                }
+            if (childNode.value !== null && childNode.value > bestEval) {
+                bestEval = childNode.value;
+                bestMove = key.split(':')[0].split(",").map(Number);
             }
         });
         return bestMove;
     }
     //Ocena heurystyczna dla bieżącego stanu gry:
     evaluate() {
-        if (this.heuristic == "pieces_amount")
+        if (HEURISTIC == "pieces_amount")
             return this.evaluatePiecesAmount();
-        if (this.heuristic == "corners_amount")
+        if (HEURISTIC == "corners_amount")
             return this.evaluateCornersAmount();
-        if (this.heuristic == "available_moves_amount")
+        if (HEURISTIC == "available_moves_amount")
             return this.evaluateAvailableMovesAmount();
-        throw new Error("Invalid heuristic");
     }
     evaluatePiecesAmount() {
         const count1 = this.countPieces(1);
@@ -263,14 +260,15 @@ class ReversiSingleTree {
         let availableMoves = 0;
         for (let row = 0; row < 8; row++) {
             for (let col = 0; col < 8; col++) {
-                if (this.isValidMove(row, col))
+                if (this.isValidMove(row, col)) {
                     availableMoves++;
+                }
             }
         }
         return availableMoves;
     }
     clone() {
-        const clonedReversi = new ReversiSingleTree(this.heuristic, JSON.parse(JSON.stringify(this.board)));
+        const clonedReversi = new ReversiOptimized(JSON.parse(JSON.stringify(this.board)));
         clonedReversi.currentPlayer = this.currentPlayer;
         return clonedReversi;
     }
@@ -280,14 +278,14 @@ class ReversiSingleTree {
     //Symulacja gry z wykorzystaniem algorytmu minimax
     playSimulation(depth) {
         let round = 0;
-        ReversiSingleTree.minimaxTreeRoot = new MinimaxNode();
         while (!this.isGameOver()) {
-            this.buildMinimaxTree(depth);
-            const move = this.findBestMove(ReversiSingleTree.minimaxTreeRoot);
+            const root = new MinimaxNode();
+            this.minimax(depth, -Infinity, Infinity, true, root);
+            const move = this.findBestMove(root);
             if (move) {
+                this.makeMove(move[0], move[1]);
                 round++;
                 console.log(`ROUND: ${round}, TURN: player ${this.currentPlayer}`);
-                this.makeMove(move[0], move[1]);
                 this.printBoard();
             }
             else {
@@ -296,12 +294,12 @@ class ReversiSingleTree {
         }
         const count1 = this.countPieces(1);
         const count2 = this.countPieces(2);
-        return [round, count1 > count2 ? 1 : 2, count1, count2];
+        return [round, count1 > count2 ? 1 : 2];
     }
     printBoard() {
         for (const row of this.board)
             console.log(row.join(' '));
     }
 }
-ReversiSingleTree.minimaxTreeRoot = null;
-exports.default = ReversiSingleTree;
+ReversiOptimized.minimaxTreeRoot = new MinimaxNode();
+exports.default = ReversiOptimized;

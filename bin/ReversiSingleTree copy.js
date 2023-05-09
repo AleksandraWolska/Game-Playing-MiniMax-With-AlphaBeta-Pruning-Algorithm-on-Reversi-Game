@@ -7,7 +7,6 @@ const DIRECTIONS = [
     [0, -1], [0, 1],
     [1, -1], [1, 0], [1, 1]
 ];
-// Klasa reprezentująca węzeł w drzewie minimax
 class MinimaxNode {
     constructor() {
         this.children = new Map();
@@ -50,14 +49,13 @@ class ReversiSingleTree {
         }
         return board;
     }
-    // Generowanie hasha stanu planszy
     hashBoardState() {
         return this.board.flatMap(row => row).join('');
     }
-    // Budowanie drzewa minimax
     buildMinimaxTree(depth) {
         if (ReversiSingleTree.minimaxTreeRoot === null) {
             ReversiSingleTree.minimaxTreeRoot = new MinimaxNode();
+            console.log("nowe drzewo");
         }
         this.minimax(depth, -Infinity, Infinity, true, ReversiSingleTree.minimaxTreeRoot);
         return ReversiSingleTree.minimaxTreeRoot;
@@ -68,24 +66,19 @@ class ReversiSingleTree {
     }
     //Sprawdzenie czy ruch jest dozwolony
     isValidMove(row, col) {
-        //sprawdzanie czy pole jest puste, jelsi nie to false
         if (this.board[row][col] !== 0) {
             return false;
         }
-        // Przeszukanie wszystkich mozliwych kierunków
         for (const direction of DIRECTIONS) {
             const newRow = row + direction[0];
             const newCol = col + direction[1];
-            // Jeśli pozycja jest na planszy i zawiera pionek przeciwnika
             if (this.isOnBoard(newRow, newCol) &&
                 this.board[newRow][newCol] === 3 - this.currentPlayer) {
                 let currentRow = newRow + direction[0];
                 let currentCol = newCol + direction[1];
-                // Przeszukaj w danym kierunku
                 while (this.isOnBoard(currentRow, currentCol)) {
                     if (this.board[currentRow][currentCol] === 0)
                         break;
-                    //jelsi znajdzie pionek obecnego gracza zwraca true
                     if (this.board[currentRow][currentCol] === this.currentPlayer)
                         return true;
                     currentRow += direction[0];
@@ -98,11 +91,9 @@ class ReversiSingleTree {
     //Wykonanie ruchu na planszy:
     makeMove(row, col) {
         this.board[row][col] = this.currentPlayer;
-        // Sprawdzanie każdego kierunku w celu odwrócenia pionków przeciwnika
         for (const direction of DIRECTIONS) {
             const newRow = row + direction[0];
             const newCol = col + direction[1];
-            // Jeśli pozycja jest na planszy i zawiera pionek przeciwnika
             if (this.isOnBoard(newRow, newCol) &&
                 this.board[newRow][newCol] === 3 - this.currentPlayer) {
                 let currentRow = newRow + direction[0];

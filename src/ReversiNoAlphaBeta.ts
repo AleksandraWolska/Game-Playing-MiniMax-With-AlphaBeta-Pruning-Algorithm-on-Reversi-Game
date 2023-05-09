@@ -7,7 +7,6 @@ const DIRECTIONS = [
     [1, -1], [1, 0], [1, 1]
 ];
 
-// Klasa reprezentująca węzeł w drzewie minimax
 export class MinimaxNode {
     children: Map<string, MinimaxNode>
     value: number | null;
@@ -17,7 +16,7 @@ export class MinimaxNode {
         this.value = null
     }
 }
-export default class ReversiSingleTree {
+export default class ReversiNoAlphaBeta {
 
     static minimaxTreeRoot: MinimaxNode | null = null
     board: Board
@@ -64,18 +63,19 @@ export default class ReversiSingleTree {
         return board
     }
 
-    // Generowanie hasha stanu planszy
+
     private hashBoardState(): string {
         return this.board.flatMap(row => row).join('');
     }
 
-    // Budowanie drzewa minimax
+
     buildMinimaxTree(depth: number): MinimaxNode {
-        if (ReversiSingleTree.minimaxTreeRoot === null) {
-            ReversiSingleTree.minimaxTreeRoot = new MinimaxNode()
+        if (ReversiNoAlphaBeta.minimaxTreeRoot === null) {
+            ReversiNoAlphaBeta.minimaxTreeRoot = new MinimaxNode()
+            console.log("nowe drzewo")
         }
-        this.minimax(depth, -Infinity, Infinity, true, ReversiSingleTree.minimaxTreeRoot)
-        return ReversiSingleTree.minimaxTreeRoot
+        this.minimax(depth, true, ReversiNoAlphaBeta.minimaxTreeRoot)
+        return ReversiNoAlphaBeta.minimaxTreeRoot
     }
 
     //Sprawdzenie czy pozycja (wiersz, kolumna) znajduje się na planszy
@@ -86,16 +86,14 @@ export default class ReversiSingleTree {
 
     //Sprawdzenie czy ruch jest dozwolony
     isValidMove(row: number, col: number): boolean {
-        //sprawdzanie czy pole jest puste, jelsi nie to false
         if (this.board[row][col] !== 0) {
             return false
         }
-        // Przeszukanie wszystkich mozliwych kierunków
+
         for (const direction of DIRECTIONS) {
             const newRow = row + direction[0]
             const newCol = col + direction[1];
 
-            // Jeśli pozycja jest na planszy i zawiera pionek przeciwnika
             if (
                 this.isOnBoard(newRow, newCol) &&
                 this.board[newRow][newCol] === 3 - this.currentPlayer
@@ -103,10 +101,8 @@ export default class ReversiSingleTree {
                 let currentRow = newRow + direction[0]
                 let currentCol = newCol + direction[1];
 
-                // Przeszukaj w danym kierunku
                 while (this.isOnBoard(currentRow, currentCol)) {
                     if (this.board[currentRow][currentCol] === 0) break
-                    //jelsi znajdzie pionek obecnego gracza zwraca true
                     if (this.board[currentRow][currentCol] === this.currentPlayer) return true
                     currentRow += direction[0]
                     currentCol += direction[1]
@@ -120,11 +116,10 @@ export default class ReversiSingleTree {
     makeMove(row: number, col: number): void {
         this.board[row][col] = this.currentPlayer;
 
-        // Sprawdzanie każdego kierunku w celu odwrócenia pionków przeciwnika
         for (const direction of DIRECTIONS) {
             const newRow = row + direction[0]
             const newCol = col + direction[1];
-            // Jeśli pozycja jest na planszy i zawiera pionek przeciwnika
+
             if (
                 this.isOnBoard(newRow, newCol) &&
                 this.board[newRow][newCol] === 3 - this.currentPlayer
@@ -132,7 +127,6 @@ export default class ReversiSingleTree {
                 let currentRow = newRow + direction[0]
                 let currentCol = newCol + direction[1]
                 let toFlip: number[][] = [[newRow, newCol]];
-
 
                 while (this.isOnBoard(currentRow, currentCol)) {
                     if (this.board[currentRow][currentCol] === 0) break
@@ -193,8 +187,7 @@ export default class ReversiSingleTree {
     }
 
 
-    // Implementacja algorytmu minimax z alfa-beta przycinaniem:
-    minimax(depth: number, alpha: number, beta: number, maximizingPlayer: boolean, node: MinimaxNode): number {
+    minimax(depth: number, maximizingPlayer: boolean, node: MinimaxNode): number {
         if (depth === 0 || this.isGameOver()) {
             node.value = this.evaluate(); // return heuristic evaluation for the current game state
             return node.value
@@ -210,10 +203,8 @@ export default class ReversiSingleTree {
                         const childNode = new MinimaxNode()
                         const childKey = `${row},${col},${this.hashBoardState()}`
                         node.children.set(childKey, childNode)
-                        const evalValue = clonedReversi.minimax(depth - 1, alpha, beta, false, childNode)
+                        const evalValue = clonedReversi.minimax(depth - 1, false, childNode)
                         maxEval = Math.max(maxEval, evalValue)
-                        alpha = Math.max(alpha, evalValue)
-                        if (beta <= alpha) break
                     }
                 }
             }
@@ -229,10 +220,8 @@ export default class ReversiSingleTree {
                         const childNode = new MinimaxNode()
                         const childKey = `${row},${col},${this.hashBoardState()}`
                         node.children.set(childKey, childNode)
-                        const evalValue = newReversi.minimax(depth - 1, alpha, beta, true, childNode)
+                        const evalValue = newReversi.minimax(depth - 1, true, childNode)
                         minEval = Math.min(minEval, evalValue)
-                        beta = Math.min(beta, evalValue)
-                        if (beta <= alpha) break
                     }
                 }
             }
@@ -307,8 +296,8 @@ export default class ReversiSingleTree {
     }
 
 
-    clone(): ReversiSingleTree {
-        const clonedReversi = new ReversiSingleTree(this.heuristic, JSON.parse(JSON.stringify(this.board)))
+    clone(): ReversiNoAlphaBeta {
+        const clonedReversi = new ReversiNoAlphaBeta(this.heuristic, JSON.parse(JSON.stringify(this.board)))
         clonedReversi.currentPlayer = this.currentPlayer
         return clonedReversi
     }
@@ -320,11 +309,11 @@ export default class ReversiSingleTree {
     //Symulacja gry z wykorzystaniem algorytmu minimax
     playSimulation(depth: number): [number, number, number, number] {
         let round = 0
-        ReversiSingleTree.minimaxTreeRoot = new MinimaxNode()
+        ReversiNoAlphaBeta.minimaxTreeRoot = new MinimaxNode()
         while (!this.isGameOver()) {
             this.buildMinimaxTree(depth);
 
-            const move = this.findBestMove(ReversiSingleTree.minimaxTreeRoot);
+            const move = this.findBestMove(ReversiNoAlphaBeta.minimaxTreeRoot);
 
             if (move) {
                 round++
