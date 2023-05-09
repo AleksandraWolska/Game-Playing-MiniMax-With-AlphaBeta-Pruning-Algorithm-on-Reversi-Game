@@ -7,41 +7,30 @@ const DIRECTIONS = [
     [1, -1], [1, 0], [1, 1]
 ];
 
-// const heuristic = {
-//     PIECES_AMOUNT: "pieces_amount",
-//     CORNER_AMOUNT: "corners_amount",
-//     AVAILABLE_MOVES_AMOUNT: "available_moves_amount",
-// }
-
-// const HEURISTIC = heuristic.PIECES_AMOUNT
-
-
- 
-
 export class MinimaxNode {
-    children: Map<string, MinimaxNode>;
+    children: Map<string, MinimaxNode>
     value: number | null;
 
     constructor() {
-        this.children = new Map<string, MinimaxNode>();
-        this.value = null;
+        this.children = new Map<string, MinimaxNode>()
+        this.value = null
     }
 }
 export default class ReversiSingleTree {
 
-    static minimaxTreeRoot: MinimaxNode | null = null;
-    board: Board;
-    currentPlayer: number;
-    directions: number[][];
-    heuristic : string
+    static minimaxTreeRoot: MinimaxNode | null = null
+    board: Board
+    currentPlayer: number
+    directions: number[][]
+    heuristic: string
 
 
     // Inicjalizacja pustej planszy lub planszy z istniejącego ciągu znaków / tablicy
-    constructor(heuristic : string, inputBoard?: string | Board) {
-        
+    constructor(heuristic: string, inputBoard?: string | Board) {
+
         if (!inputBoard) {
             this.board = this.createEmptyBoard()
-            this.initializeBoard();
+            this.initializeBoard()
         } else if (typeof inputBoard === "string") {
             this.board = this.parseInput(inputBoard)
         } else {
@@ -50,84 +39,77 @@ export default class ReversiSingleTree {
 
         this.heuristic = heuristic
         this.currentPlayer = 1;
- 
     }
 
     createEmptyBoard(): Board {
-        return new Array(8).fill(null).map(() => new Array(8).fill(0));
+        return new Array(8).fill(null).map(() => new Array(8).fill(0))
     }
 
     initializeBoard(): void {
-        this.board[3][3] = 1;
-        this.board[3][4] = 2;
-        this.board[4][3] = 2;
-        this.board[4][4] = 1;
+        this.board[3][3] = 1
+        this.board[3][4] = 2
+        this.board[4][3] = 2
+        this.board[4][4] = 1
     }
 
     //Konwersja ciągu wejściowego na tablicę planszy
     parseInput(input: string): Board {
-        const rows = input.trim().split('\n');
-        const board: Board = [];
+        const rows = input.trim().split('\n')
+        const board: Board = []
         for (let i = 0; i < 8; i++) {
-            const row: number[] = rows[i].trim().split(' ').map(Number);
-            board.push(row);
+            const row: number[] = rows[i].trim().split(' ').map(Number)
+            board.push(row)
         }
-        return board;
+        return board
     }
 
-    
-private hashBoardState(): string {
-    return this.board.flatMap(row => row).join('');
-    
-}
+
+    private hashBoardState(): string {
+        return this.board.flatMap(row => row).join('');
+    }
 
 
     buildMinimaxTree(depth: number): MinimaxNode {
         if (ReversiSingleTree.minimaxTreeRoot === null) {
-            ReversiSingleTree.minimaxTreeRoot = new MinimaxNode();
+            ReversiSingleTree.minimaxTreeRoot = new MinimaxNode()
             console.log("nowe drzewo")
         }
-        this.minimax(depth, -Infinity, Infinity, true, ReversiSingleTree.minimaxTreeRoot);
-        return ReversiSingleTree.minimaxTreeRoot;
+        this.minimax(depth, -Infinity, Infinity, true, ReversiSingleTree.minimaxTreeRoot)
+        return ReversiSingleTree.minimaxTreeRoot
     }
 
     //Sprawdzenie czy pozycja (wiersz, kolumna) znajduje się na planszy
     private isOnBoard(row: number, col: number): boolean {
-        return row >= 0 && row < 8 && col >= 0 && col < 8;
+        return row >= 0 && row < 8 && col >= 0 && col < 8
     }
 
 
     //Sprawdzenie czy ruch jest dozwolony
     isValidMove(row: number, col: number): boolean {
         if (this.board[row][col] !== 0) {
-            return false;
+            return false
         }
 
         for (const direction of DIRECTIONS) {
-            const newRow = row + direction[0];
+            const newRow = row + direction[0]
             const newCol = col + direction[1];
 
             if (
                 this.isOnBoard(newRow, newCol) &&
                 this.board[newRow][newCol] === 3 - this.currentPlayer
             ) {
-                let currentRow = newRow + direction[0];
+                let currentRow = newRow + direction[0]
                 let currentCol = newCol + direction[1];
 
                 while (this.isOnBoard(currentRow, currentCol)) {
-                    if (this.board[currentRow][currentCol] === 0) {
-                        break;
-                    }
-                    if (this.board[currentRow][currentCol] === this.currentPlayer) {
-                        return true;
-                    }
-                    currentRow += direction[0];
-                    currentCol += direction[1];
+                    if (this.board[currentRow][currentCol] === 0) break
+                    if (this.board[currentRow][currentCol] === this.currentPlayer) return true
+                    currentRow += direction[0]
+                    currentCol += direction[1]
                 }
             }
         }
-
-        return false;
+        return false
     }
 
     //Wykonanie ruchu na planszy:
@@ -135,79 +117,69 @@ private hashBoardState(): string {
         this.board[row][col] = this.currentPlayer;
 
         for (const direction of DIRECTIONS) {
-            const newRow = row + direction[0];
+            const newRow = row + direction[0]
             const newCol = col + direction[1];
 
             if (
                 this.isOnBoard(newRow, newCol) &&
                 this.board[newRow][newCol] === 3 - this.currentPlayer
             ) {
-                let currentRow = newRow + direction[0];
-                let currentCol = newCol + direction[1];
+                let currentRow = newRow + direction[0]
+                let currentCol = newCol + direction[1]
                 let toFlip: number[][] = [[newRow, newCol]];
 
                 while (this.isOnBoard(currentRow, currentCol)) {
-                    if (this.board[currentRow][currentCol] === 0) {
-                        break;
-                    }
+                    if (this.board[currentRow][currentCol] === 0) break
                     if (this.board[currentRow][currentCol] === this.currentPlayer) {
                         for (const pos of toFlip) {
-                            this.board[pos[0]][pos[1]] = this.currentPlayer;
+                            this.board[pos[0]][pos[1]] = this.currentPlayer
                         }
-                        break;
+                        break
                     }
-                    toFlip.push([currentRow, currentCol]);
-                    currentRow += direction[0];
-                    currentCol += direction[1];
+                    toFlip.push([currentRow, currentCol])
+                    currentRow += direction[0]
+                    currentCol += direction[1]
                 }
             }
         }
-
-        this.currentPlayer = 3 - this.currentPlayer;
+        this.currentPlayer = 3 - this.currentPlayer
     }
-
 
 
     //Sprawdzanie czy gracz ma dozwolone ruchy
     hasValidMoves(): boolean {
         for (let row = 0; row < 8; row++) {
             for (let col = 0; col < 8; col++) {
-                if (this.isValidMove(row, col)) {
-                    return true;
-                }
+                if (this.isValidMove(row, col)) return true
             }
         }
-        return false;
+        return false
     }
 
     isGameOver(): boolean {
         for (let player = 1; player <= 2; player++) {
-            if (this.hasValidMoves()) {
-                return false;
-            }
-            this.currentPlayer = 3 - this.currentPlayer;
+            if (this.hasValidMoves()) return false
+            this.currentPlayer = 3 - this.currentPlayer
         }
-        return true;
+        return true
     }
 
 
     //Zliczanie pionków na planszy dla danego gracza
     countPieces(player: number): number {
-        let count = 0;
+        let count = 0
         for (let row = 0; row < 8; row++) {
             for (let col = 0; col < 8; col++) {
-                if (this.board[row][col] === player) {
-                    count++;
-                }
+                if (this.board[row][col] === player) count++
             }
         }
-        return count;
+        return count
     }
 
     getWinner(): number | null {
         if (!this.isGameOver()) return null;
 
-        const count1 = this.countPieces(1);
+        const count1 = this.countPieces(1)
         const count2 = this.countPieces(2);
 
         return count1 > count2 ? 1 : count1 < count2 ? 2 : 0
@@ -219,92 +191,87 @@ private hashBoardState(): string {
     minimax(depth: number, alpha: number, beta: number, maximizingPlayer: boolean, node: MinimaxNode): number {
         if (depth === 0 || this.isGameOver()) {
             node.value = this.evaluate(); // return heuristic evaluation for the current game state
-            return node.value;
+            return node.value
         }
 
         if (maximizingPlayer) {
-            let maxEval = -Infinity;
+            let maxEval = -Infinity
             for (let row = 0; row < 8; row++) {
                 for (let col = 0; col < 8; col++) {
                     if (this.isValidMove(row, col)) {
-                        const clonedReversi = this.clone();
-                        clonedReversi.makeMove(row, col);
-                        const childNode = new MinimaxNode();
-                        const childKey = `${row},${col},${this.hashBoardState()}`;
-                        node.children.set(childKey, childNode);
-                        const evalValue = clonedReversi.minimax(depth - 1, alpha, beta, false, childNode);
-                        maxEval = Math.max(maxEval, evalValue);
-                        alpha = Math.max(alpha, evalValue);
-                        if (beta <= alpha) {
-                            break;
-                        }
+                        const clonedReversi = this.clone()
+                        clonedReversi.makeMove(row, col)
+                        const childNode = new MinimaxNode()
+                        const childKey = `${row},${col},${this.hashBoardState()}`
+                        node.children.set(childKey, childNode)
+                        const evalValue = clonedReversi.minimax(depth - 1, alpha, beta, false, childNode)
+                        maxEval = Math.max(maxEval, evalValue)
+                        alpha = Math.max(alpha, evalValue)
+                        if (beta <= alpha) break
                     }
                 }
             }
-            node.value = maxEval;
-            return maxEval;
+            node.value = maxEval
+            return maxEval
         } else {
-            let minEval = Infinity;
+            let minEval = Infinity
             for (let row = 0; row < 8; row++) {
                 for (let col = 0; col < 8; col++) {
                     if (this.isValidMove(row, col)) {
-                        const newReversi = this.clone();
-                        newReversi.makeMove(row, col);
-                        const childNode = new MinimaxNode();
-                        const childKey = `${row},${col},${this.hashBoardState()}`;
-                        node.children.set(childKey, childNode);
-                        const evalValue = newReversi.minimax(depth - 1, alpha, beta, true, childNode);
-                        minEval = Math.min(minEval, evalValue);
-                        beta = Math.min(beta, evalValue);
-                        if (beta <= alpha) {
-                            break;
-                        }
+                        const newReversi = this.clone()
+                        newReversi.makeMove(row, col)
+                        const childNode = new MinimaxNode()
+                        const childKey = `${row},${col},${this.hashBoardState()}`
+                        node.children.set(childKey, childNode)
+                        const evalValue = newReversi.minimax(depth - 1, alpha, beta, true, childNode)
+                        minEval = Math.min(minEval, evalValue)
+                        beta = Math.min(beta, evalValue)
+                        if (beta <= alpha) break
                     }
                 }
             }
-            node.value = minEval;
-            return minEval;
+            node.value = minEval
+            return minEval
         }
     }
 
 
     findBestMove(node: MinimaxNode): [number, number] | null {
-        let bestEval = this.currentPlayer === 1 ? -Infinity : Infinity;
-        let bestMove: [number, number] | null = null;
-        const currentBoardHash = this.hashBoardState();
+        let bestEval = this.currentPlayer === 1 ? -Infinity : Infinity
+        let bestMove: [number, number] | null = null
+        const currentBoardHash = this.hashBoardState()
         node.children.forEach((childNode, key) => {
-            const [row, col, boardHash] = key.split(',');
+            const [row, col, boardHash] = key.split(',')
             if (boardHash === currentBoardHash && childNode.value !== null) {
-                if ((this.currentPlayer === 1 && childNode.value > bestEval) || 
+                if ((this.currentPlayer === 1 && childNode.value > bestEval) ||
                     (this.currentPlayer === 2 && childNode.value < bestEval)) {
-                    bestEval = childNode.value;
-                    bestMove = [parseInt(row), parseInt(col)];
+                    bestEval = childNode.value
+                    bestMove = [parseInt(row), parseInt(col)]
                 }
             }
-        });
-        return bestMove;
+        })
+        return bestMove
     }
-    
+
 
 
     //Ocena heurystyczna dla bieżącego stanu gry:
     evaluate(): number {
-        if (this.heuristic == "pieces_amount") return this.evaluatePiecesAmount();
-        if (this.heuristic == "corners_amount") return this.evaluateCornersAmount();
-        if (this.heuristic == "available_moves_amount") return this.evaluateAvailableMovesAmount();
-        throw new Error("Invalid heuristic");
+        if (this.heuristic == "pieces_amount") return this.evaluatePiecesAmount()
+        if (this.heuristic == "corners_amount") return this.evaluateCornersAmount()
+        if (this.heuristic == "available_moves_amount") return this.evaluateAvailableMovesAmount()
+        throw new Error("Invalid heuristic")
     }
 
 
     evaluatePiecesAmount(): number {
-        const count1 = this.countPieces(1);
-        const count2 = this.countPieces(2);
-        return count1 - count2;
+        const count1 = this.countPieces(1)
+        const count2 = this.countPieces(2)
+        return count1 - count2
     }
 
     evaluateCornersAmount(): number {
-
-        let cornerScore = 0;
+        let cornerScore = 0
         const cornerPositions = [
             [0, 0],
             [0, 7],
@@ -314,71 +281,62 @@ private hashBoardState(): string {
 
         for (const position of cornerPositions) {
             if (this.board[position[0]][position[1]] === this.currentPlayer) {
-                cornerScore++;
+                cornerScore++
             } else if (this.board[position[0]][position[1]] === 3 - this.currentPlayer) {
-                cornerScore--;
+                cornerScore--
             }
         }
-
-        return cornerScore;
+        return cornerScore
     }
 
 
     evaluateAvailableMovesAmount(): number {
-
-        let availableMoves = 0;
-
+        let availableMoves = 0
         for (let row = 0; row < 8; row++) {
             for (let col = 0; col < 8; col++) {
-                if (this.isValidMove(row, col)) {
-                    availableMoves++;
-                }
+                if (this.isValidMove(row, col)) availableMoves++
             }
         }
-
-        return availableMoves;
+        return availableMoves
     }
 
 
     clone(): ReversiSingleTree {
-        const clonedReversi = new ReversiSingleTree(this.heuristic, JSON.parse(JSON.stringify(this.board)));
-        clonedReversi.currentPlayer = this.currentPlayer;
-        return clonedReversi;
+        const clonedReversi = new ReversiSingleTree(this.heuristic, JSON.parse(JSON.stringify(this.board)))
+        clonedReversi.currentPlayer = this.currentPlayer
+        return clonedReversi
     }
 
     switchPlayer() {
-        this.currentPlayer = 3 - this.currentPlayer;
+        this.currentPlayer = 3 - this.currentPlayer
     }
 
     //Symulacja gry z wykorzystaniem algorytmu minimax
-    // playSimulation method
     playSimulation(depth: number): [number, number, number, number] {
-        let round = 0;
-        ReversiSingleTree.minimaxTreeRoot = new MinimaxNode();
+        let round = 0
+        ReversiSingleTree.minimaxTreeRoot = new MinimaxNode()
         while (!this.isGameOver()) {
             this.buildMinimaxTree(depth);
-    
-            // Use the minimax tree to find the best move
+
             const move = this.findBestMove(ReversiSingleTree.minimaxTreeRoot);
-    
+
             if (move) {
-                this.makeMove(move[0], move[1]);
-                round++;
-                console.log(`ROUND: ${round}, TURN: player ${3 - this.currentPlayer}`);
-                this.printBoard();
+                round++
+                console.log(`ROUND: ${round}, TURN: player ${this.currentPlayer}`)
+                this.makeMove(move[0], move[1])
+                this.printBoard()
             } else {
-                this.switchPlayer();
+                this.switchPlayer()
             }
         }
-    
-        const count1 = this.countPieces(1);
-        const count2 = this.countPieces(2);
-        return [round, count1 > count2 ? 1 : 2, count1, count2];
+
+        const count1 = this.countPieces(1)
+        const count2 = this.countPieces(2)
+        return [round, count1 > count2 ? 1 : 2, count1, count2]
     }
 
     printBoard() {
-        for (const row of this.board) console.log(row.join(' '));
+        for (const row of this.board) console.log(row.join(' '))
     }
-
 }
 
