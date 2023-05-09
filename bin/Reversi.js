@@ -6,15 +6,9 @@ const DIRECTIONS = [
     [0, -1], [0, 1],
     [1, -1], [1, 0], [1, 1]
 ];
-const heuristic = {
-    PIECES_AMOUNT: "pieces_amount",
-    CORNER_AMOUNT: "corners_amount",
-    AVAILABLE_MOVES_AMOUNT: "available_moves_amount",
-};
-const HEURISTIC = heuristic.PIECES_AMOUNT;
 class Reversi {
     // Inicjalizacja pustej planszy lub planszy z istniejącego ciągu znaków / tablicy
-    constructor(inputBoard) {
+    constructor(heuristic, inputBoard) {
         if (!inputBoard) {
             this.board = this.createEmptyBoard();
             this.initializeBoard();
@@ -26,8 +20,7 @@ class Reversi {
             this.board = inputBoard;
         }
         this.currentPlayer = 1;
-        // Ustawienie kierunków do sprawdzania ruchów w grze
-        //this.directions = 
+        this.heuristic = heuristic;
     }
     createEmptyBoard() {
         return new Array(8).fill(null).map(() => new Array(8).fill(0));
@@ -208,11 +201,11 @@ class Reversi {
     }
     //Ocena heurystyczna dla bieżącego stanu gry:
     evaluate() {
-        if (HEURISTIC == "pieces_amount")
+        if (this.heuristic == "pieces_amount")
             return this.evaluatePiecesAmount();
-        if (HEURISTIC == "corners_amount")
+        if (this.heuristic == "corners_amount")
             return this.evaluateCornersAmount();
-        if (HEURISTIC == "available_moves_amount")
+        if (this.heuristic == "available_moves_amount")
             return this.evaluateAvailableMovesAmount();
     }
     evaluatePiecesAmount() {
@@ -250,7 +243,7 @@ class Reversi {
         return availableMoves;
     }
     clone() {
-        const clonedReversi = new Reversi(JSON.parse(JSON.stringify(this.board)));
+        const clonedReversi = new Reversi(this.heuristic, JSON.parse(JSON.stringify(this.board)));
         clonedReversi.currentPlayer = this.currentPlayer;
         return clonedReversi;
     }
@@ -265,7 +258,7 @@ class Reversi {
             if (move) {
                 this.makeMove(move[0], move[1]);
                 round++;
-                console.log(`ROUND: ${round}, TURN: player ${this.currentPlayer}`);
+                console.log(`ROUND: ${round}, TURN: player ${this.currentPlayer}, move: ${move[0]} ${move[1]}`);
                 this.printBoard();
             }
             else {
@@ -274,7 +267,7 @@ class Reversi {
         }
         const count1 = this.countPieces(1);
         const count2 = this.countPieces(2);
-        return [round, count1 > count2 ? 1 : 2];
+        return [round, count1 > count2 ? 1 : 2, count1, count2];
     }
     printBoard() {
         for (const row of this.board)

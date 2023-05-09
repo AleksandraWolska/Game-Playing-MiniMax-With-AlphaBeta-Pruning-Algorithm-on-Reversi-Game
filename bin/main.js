@@ -1,4 +1,27 @@
 "use strict";
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -12,8 +35,14 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const ReversiOptimized_1 = __importDefault(require("./ReversiOptimized"));
+const Reversi_1 = __importDefault(require("./Reversi"));
 const readline_1 = __importDefault(require("readline"));
+const heuristicMode = {
+    PIECES_AMOUNT: "pieces_amount",
+    CORNER_AMOUNT: "corners_amount",
+    AVAILABLE_MOVES_AMOUNT: "available_moves_amount",
+};
+//const HEURISTIC = heuristicMode.PIECES_AMOUNT
 function getUserInput(promptText) {
     const rl = readline_1.default.createInterface({
         input: process.stdin,
@@ -75,39 +104,76 @@ function getCLIBoardInput() {
 // }
 function interactive() {
     return __awaiter(this, void 0, void 0, function* () {
-        // while (true) {
-        try {
-            console.log("REVERSI GAME:");
-            let mode = yield getUserInput("1 - ustawienie początkowe\n2-wprowadź tablicę");
-            if (mode == "2") {
-                console.log("Podaj tablicę");
-                let inputString = yield getCLIBoardInput();
-                console.log("input stringL");
-                console.log(inputString);
-                const game = new ReversiOptimized_1.default(inputString);
-                //game.minimax(6, -Infinity, Infinity, true);
-                const time1 = Date.now();
-                const simulation_result = game.playSimulation(7);
-                const time2 = Date.now();
-                console.log(`\nFinal board after ${simulation_result[0]} rounds (player ${simulation_result[1]} wins) in ${time2 - time1}:`);
+        while (true) {
+            try {
+                console.log("REVERSI GAME:");
+                let depth = yield getUserInput("Podaj głębokość przeszukiwania:");
+                let heuristic = yield getUserInput("1 - Różnica ilości pionków\n2 - Ilośc pionków na rogach\n3 - Ilośc dostepnych ruchów\n");
+                heuristic = heuristic == "1" ? heuristicMode.PIECES_AMOUNT : heuristic == "2" ? heuristicMode.CORNER_AMOUNT : heuristicMode.AVAILABLE_MOVES_AMOUNT;
+                let mode = yield getUserInput("Podaj tryb gry:\n1 - Reversi na drzewie - ustawienie początkowe\n2Reversi na drzewie - wprowadź tablicę\n3 - Reversi - ustawienie początkowe\n4Reversi - wprowadź tablicę\n");
+                if (mode == "1") {
+                    const timeBuild1 = Date.now();
+                    const minimaxTreeRoot = new ReversiSingleTree_1.MinimaxNode();
+                    const game = new ReversiSingleTree_1.default(minimaxTreeRoot, heuristic);
+                    //const root = game.buildMinimaxTree(13);
+                    const timeBuild2 = Date.now();
+                    console.log(`Minimax tree created in ${timeBuild2 - timeBuild1}`);
+                    const time1 = Date.now();
+                    const simulation_result = game.playSimulation(Number.parseInt(depth));
+                    const time2 = Date.now();
+                    console.log(`\nFinal board after ${simulation_result[0]} rounds (player ${simulation_result[1]} wins (${simulation_result[2]} : ${simulation_result[3]})) in ${time2 - time1}:`);
+                }
+                else if (mode == "2") {
+                    console.log("Reversi da drzewie - Podaj tablicę");
+                    let inputString = yield getCLIBoardInput();
+                    console.log("WPROWADZONA TABLICA:");
+                    console.log(inputString + "\n");
+                    const timeBuild1 = Date.now();
+                    const minimaxTreeRoot = new ReversiSingleTree_1.MinimaxNode();
+                    const game = new ReversiSingleTree_1.default(minimaxTreeRoot, inputString);
+                    //const root = game.buildMinimaxTree(13);
+                    const timeBuild2 = Date.now();
+                    console.log(`Minimax tree created in ${timeBuild2 - timeBuild1}`);
+                    const time1 = Date.now();
+                    const simulation_result = game.playSimulation(Number.parseInt(depth));
+                    const time2 = Date.now();
+                    console.log(`\nFinal board after ${simulation_result[0]} rounds (player ${simulation_result[1]} wins (${simulation_result[2]} : ${simulation_result[3]})) in ${time2 - time1}:`);
+                }
+                else if (mode == "3") {
+                    const game = new Reversi_1.default(heuristic);
+                    console.log("stworzone");
+                    const time1 = Date.now();
+                    const simulation_result = game.playSimulation(Number.parseInt(depth));
+                    const time2 = Date.now();
+                    //console.log(`\nFinal board after ${simulation_result[0]} rounds (player ${simulation_result[1]} wins) in ${time2 - time1}:`);
+                    console.log(`\nFinal board after ${simulation_result[0]} rounds (player ${simulation_result[1]} wins (${simulation_result[2]} : ${simulation_result[3]})) in ${time2 - time1}:`);
+                }
+                else if (mode == "4") {
+                    console.log("Reversi bez optymalizacji - Podaj tablicę");
+                    let inputString = yield getCLIBoardInput();
+                    console.log("WPROWADZONA TABLICA:");
+                    console.log(inputString + "\n");
+                    const game = new Reversi_1.default(heuristic, inputString);
+                    const time1 = Date.now();
+                    const simulation_result = game.playSimulation(Number.parseInt(depth));
+                    const time2 = Date.now();
+                    console.log(`\nFinal board after ${simulation_result[0]} rounds (player ${simulation_result[1]} wins) in ${time2 - time1}:`);
+                }
+                else if (mode == "5") {
+                }
             }
-            else if (mode == "1") {
-                const game = new ReversiOptimized_1.default();
-                game.minimax(8, -Infinity, Infinity, true, ReversiOptimized_1.default.minimaxTreeRoot);
-                //game.minimax(6, -Infinity, Infinity, true);
-                console.log("stworzone");
-                const time1 = Date.now();
-                const simulation_result = game.playSimulation(8);
-                const time2 = Date.now();
-                console.log(`\nFinal board after ${simulation_result[0]} rounds (player ${simulation_result[1]} wins) in ${time2 - time1}:`);
+            catch (e) {
+                console.error(e.message);
             }
-        }
-        catch (e) {
-            console.error(e.message);
         }
     });
 }
-//}
+// async function main() {
+//     interactive()
+// }
+// main()
+//import ReversiOptimized from "./ReversiOptimized";
+const ReversiSingleTree_1 = __importStar(require("./ReversiSingleTree"));
 function main() {
     return __awaiter(this, void 0, void 0, function* () {
         interactive();

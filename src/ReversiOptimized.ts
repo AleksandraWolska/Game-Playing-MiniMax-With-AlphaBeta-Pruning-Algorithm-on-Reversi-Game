@@ -27,6 +27,9 @@ class MinimaxNode {
         this.value = null;
     }
 }
+
+
+
 export default class ReversiOptimized {
 
     static minimaxTreeRoot = new MinimaxNode();
@@ -55,6 +58,18 @@ export default class ReversiOptimized {
 
     createEmptyBoard(): Board {
         return new Array(8).fill(null).map(() => new Array(8).fill(0));
+    }
+
+
+    private hashBoardState(): string {
+        return this.board.flatMap(row => row).join('');
+        // let hash = 0, i, chr;
+        // for (i = 0; i < boardStr.length; i++) {
+        //     chr = boardStr.charCodeAt(i);
+        //     hash = ((hash << 5) - hash) + chr;
+        //     hash |= 0; // Convert to 32bit integer
+        // }
+        // return hash.toString();
     }
 
     initializeBoard(): void {
@@ -213,9 +228,12 @@ export default class ReversiOptimized {
                     if (this.isValidMove(row, col)) {
                         const clonedReversi = this.clone();
                         clonedReversi.makeMove(row, col);
+                        const childKey = `${row},${col}:${this.hashBoardState()}`;
+
                         const childNode = new MinimaxNode();
-                        const childKey = `${row},${col}`;
                         node.children.set(childKey, childNode);
+
+
                         const evalValue = clonedReversi.minimax(depth - 1, alpha, beta, false, childNode);
                         maxEval = Math.max(maxEval, evalValue);
                         alpha = Math.max(alpha, evalValue);
@@ -234,9 +252,12 @@ export default class ReversiOptimized {
                     if (this.isValidMove(row, col)) {
                         const newReversi = this.clone();
                         newReversi.makeMove(row, col);
+
+                        const childKey = `${row},${col}:${this.hashBoardState()}`;
+
                         const childNode = new MinimaxNode();
-                        const childKey = `${row},${col}`;
                         node.children.set(childKey, childNode);
+
                         const evalValue = newReversi.minimax(depth - 1, alpha, beta, true, childNode);
                         minEval = Math.min(minEval, evalValue);
                         beta = Math.min(beta, evalValue);
@@ -258,7 +279,7 @@ export default class ReversiOptimized {
         node.children.forEach((childNode, key) => {
             if (childNode.value !== null && childNode.value > bestEval) {
                 bestEval = childNode.value;
-                bestMove = key.split(',').map(Number) as [number, number];
+                bestMove = key.split(':')[0].split(",").map(Number) as [number, number];
             }
         });
         return bestMove;

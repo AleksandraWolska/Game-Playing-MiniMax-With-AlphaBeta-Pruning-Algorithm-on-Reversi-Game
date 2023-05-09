@@ -7,22 +7,16 @@ const DIRECTIONS = [
     [1, -1], [1, 0], [1, 1]
 ];
 
-const heuristic = {
-    PIECES_AMOUNT: "pieces_amount",
-    CORNER_AMOUNT: "corners_amount",
-    AVAILABLE_MOVES_AMOUNT: "available_moves_amount",
-}
-
-const HEURISTIC = heuristic.PIECES_AMOUNT
 
 export default class Reversi {
     board: Board;
     currentPlayer: number;
     directions: number[][];
+    heuristic: string;
 
 
     // Inicjalizacja pustej planszy lub planszy z istniejącego ciągu znaków / tablicy
-    constructor(inputBoard?: string | Board) {
+    constructor(heuristic: string, inputBoard?: string | Board) {
 
         if (!inputBoard) {
             this.board = this.createEmptyBoard()
@@ -34,8 +28,7 @@ export default class Reversi {
         }
 
         this.currentPlayer = 1;
-        // Ustawienie kierunków do sprawdzania ruchów w grze
-        //this.directions = 
+        this.heuristic = heuristic 
     }
 
     createEmptyBoard(): Board {
@@ -249,9 +242,9 @@ export default class Reversi {
     //Ocena heurystyczna dla bieżącego stanu gry:
     evaluate(): number {
 
-        if (HEURISTIC == "pieces_amount") return this.evaluatePiecesAmount()
-        if (HEURISTIC == "corners_amount") return this.evaluateCornersAmount()
-        if (HEURISTIC == "available_moves_amount") return this.evaluateAvailableMovesAmount()
+        if (this.heuristic == "pieces_amount") return this.evaluatePiecesAmount()
+        if (this.heuristic == "corners_amount") return this.evaluateCornersAmount()
+        if (this.heuristic == "available_moves_amount") return this.evaluateAvailableMovesAmount()
 
     }
 
@@ -301,7 +294,7 @@ export default class Reversi {
 
 
     clone(): Reversi {
-        const clonedReversi = new Reversi(JSON.parse(JSON.stringify(this.board)));
+        const clonedReversi = new Reversi(this.heuristic, JSON.parse(JSON.stringify(this.board)));
         clonedReversi.currentPlayer = this.currentPlayer;
         return clonedReversi;
     }
@@ -311,14 +304,14 @@ export default class Reversi {
     }
 
     //Symulacja gry z wykorzystaniem algorytmu minimax
-    playSimulation(depth: number): [number, number] {
+    playSimulation(depth: number): [number, number, number, number] {
         let round = 0;
         while (!this.isGameOver()) {
             const move = this.findBestMove(depth);
             if (move) {
                 this.makeMove(move[0], move[1]);
                 round++;
-                console.log(`ROUND: ${round}, TURN: player ${this.currentPlayer}`)
+                console.log(`ROUND: ${round}, TURN: player ${this.currentPlayer}, move: ${move[0]} ${move[1]}`)
                 this.printBoard()
             } else {
                 this.switchPlayer();
@@ -326,7 +319,7 @@ export default class Reversi {
         }
         const count1 = this.countPieces(1);
         const count2 = this.countPieces(2);
-        return [round, count1 > count2 ? 1 : 2];
+        return [round, count1 > count2 ? 1 : 2, count1, count2];
     }
 
     printBoard() {
