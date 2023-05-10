@@ -12,7 +12,6 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const Reversi_1 = __importDefault(require("./Reversi"));
 const ReversiNoAlphaBeta_1 = __importDefault(require("./ReversiNoAlphaBeta"));
 const ReversiSingleTree_1 = __importDefault(require("./ReversiSingleTree"));
 const readline_1 = __importDefault(require("readline"));
@@ -20,6 +19,7 @@ const heuristicMode = {
     PIECES_AMOUNT: "pieces_amount",
     CORNER_AMOUNT: "corners_amount",
     AVAILABLE_MOVES_AMOUNT: "available_moves_amount",
+    POSITION_AMOUNT: "position_amount",
 };
 function getUserInput(promptText) {
     const rl = readline_1.default.createInterface({
@@ -61,9 +61,9 @@ function main() {
             try {
                 console.log("REVERSI GAME:");
                 let depth = yield getUserInput("Podaj głębokość przeszukiwania:");
-                let heuristic = yield getUserInput("1 - Różnica ilości pionków\n2 - Ilośc pionków na rogach\n3 - Ilośc dostepnych ruchów\n");
-                heuristic = heuristic == "1" ? heuristicMode.PIECES_AMOUNT : heuristic == "2" ? heuristicMode.CORNER_AMOUNT : heuristicMode.AVAILABLE_MOVES_AMOUNT;
-                let mode = yield getUserInput("Podaj tryb gry:\n1 - Reversi na drzewie - ustawienie początkowe\n2 - Reversi na drzewie - wprowadź tablicę\n3 - Reversi (deprecated) - ustawienie początkowe\n4 - Reversi (deprecated) - wprowadź tablicę\n5 - Reversi bez AlphaBeta na drzewie - ustawienie początkowe\n6 - Reversi bez AlphaBeta na drzewie - wprowadź tablicę\n");
+                let heuristic = yield getUserInput("1 - Różnica ilości pionków\n2 - Ilośc pionków na rogach\n3 - Ilośc dostepnych ruchów\n4 - Kluczowe pozycje");
+                heuristic = heuristic == "1" ? heuristicMode.PIECES_AMOUNT : heuristic == "2" ? heuristicMode.CORNER_AMOUNT : heuristic == "3" ? heuristicMode.AVAILABLE_MOVES_AMOUNT : heuristicMode.POSITION_AMOUNT;
+                let mode = yield getUserInput("Podaj tryb gry:\n1 - Reversi na drzewie - ustawienie początkowe\n2 - Reversi na drzewie - wprowadź tablicę\n3 - Reversi bez AlphaBeta na drzewie - ustawienie początkowe\n4 - Reversi bez AlphaBeta na drzewie - wprowadź tablicę\n");
                 if (mode == "1") {
                     const game = new ReversiSingleTree_1.default(heuristic);
                     console.log("SIMULATION\n============================================\n");
@@ -85,26 +85,6 @@ function main() {
                     console.log(`\nFinal board after ${simulation_result[0]} rounds (player ${simulation_result[1]} wins (${simulation_result[2]} : ${simulation_result[3]})) in ${time2 - time1}:`);
                 }
                 else if (mode == "3") {
-                    const game = new Reversi_1.default(heuristic);
-                    console.log("SIMULATION\n============================================\n");
-                    const time1 = Date.now();
-                    const simulation_result = game.playSimulation(Number.parseInt(depth));
-                    const time2 = Date.now();
-                    console.log(`\nFinal board after ${simulation_result[0]} rounds (player ${simulation_result[1]} wins (${simulation_result[2]} : ${simulation_result[3]})) in ${time2 - time1}:`);
-                }
-                else if (mode == "4") {
-                    console.log("Reversi bez optymalizacji - Podaj tablicę");
-                    let inputString = yield getCLIBoardInput();
-                    console.log("WPROWADZONA TABLICA:");
-                    console.log(inputString + "\n=======================================\n");
-                    const game = new Reversi_1.default(heuristic, inputString);
-                    console.log("SIMULATION\n============================================\n");
-                    const time1 = Date.now();
-                    const simulation_result = game.playSimulation(Number.parseInt(depth));
-                    const time2 = Date.now();
-                    console.log(`\nFinal board after ${simulation_result[0]} rounds (player ${simulation_result[1]} wins) in ${time2 - time1}:`);
-                }
-                if (mode == "5") {
                     const game = new ReversiNoAlphaBeta_1.default(heuristic);
                     console.log("SIMULATION\n============================================\n");
                     const time1 = Date.now();
@@ -112,7 +92,7 @@ function main() {
                     const time2 = Date.now();
                     console.log(`\nFinal board after ${simulation_result[0]} rounds (player ${simulation_result[1]} wins (${simulation_result[2]} : ${simulation_result[3]})) in ${time2 - time1}:`);
                 }
-                else if (mode == "6") {
+                else if (mode == "4") {
                     console.log("Reversi na drzewie - Podaj tablicę");
                     let inputString = yield getCLIBoardInput();
                     console.log("WPROWADZONA TABLICA:");

@@ -195,8 +195,9 @@ export default class ReversiSingleTree {
 
     // Implementacja algorytmu minimax z alfa-beta przycinaniem:
     minimax(depth: number, alpha: number, beta: number, maximizingPlayer: boolean, node: MinimaxNode): number {
+        //zwrotka jesli przeszukiwanie (głębokość) zakończone
         if (depth === 0 || this.isGameOver()) {
-            node.value = this.evaluate(); // return heuristic evaluation for the current game state
+            node.value = this.evaluate();
             return node.value
         }
 
@@ -205,15 +206,16 @@ export default class ReversiSingleTree {
             for (let row = 0; row < 8; row++) {
                 for (let col = 0; col < 8; col++) {
                     if (this.isValidMove(row, col)) {
-                        const clonedReversi = this.clone()
+                        const clonedReversi = this.clone()  //klonowanie stanu gry
                         clonedReversi.makeMove(row, col)
                         const childNode = new MinimaxNode()
                         const childKey = `${row},${col},${this.hashBoardState()}`
-                        node.children.set(childKey, childNode)
-                        const evalValue = clonedReversi.minimax(depth - 1, alpha, beta, false, childNode)
-                        maxEval = Math.max(maxEval, evalValue)
+                        node.children.set(childKey, childNode) //dodanie do drzewa gry jako dziecko
+                        //wywołanie rekurencyjne na tym drzewie z odwróconym maximizing player (false)
+                        const evalValue = clonedReversi.minimax(depth - 1, alpha, beta, false, childNode)  
+                        maxEval = Math.max(maxEval, evalValue) //aktualizacja najlepszej dotychczasowej oceny
                         alpha = Math.max(alpha, evalValue)
-                        if (beta <= alpha) break
+                        if (beta <= alpha) break //przerwanie pętli, jeśi dana gałąź nie będzie miała lepszych wartości
                     }
                 }
             }
@@ -266,6 +268,7 @@ export default class ReversiSingleTree {
         if (this.heuristic == "pieces_amount") return this.evaluatePiecesAmount()
         if (this.heuristic == "corners_amount") return this.evaluateCornersAmount()
         if (this.heuristic == "available_moves_amount") return this.evaluateAvailableMovesAmount()
+        if (this.heuristic == "position_amount") return this.evaluatePiecePosition()
         throw new Error("Invalid heuristic")
     }
 
@@ -305,6 +308,34 @@ export default class ReversiSingleTree {
         }
         return availableMoves
     }
+
+    evaluatePiecePosition(): number {
+        let positionScore = 0;
+    
+        // preferowanie rogów i unikanie pól przy rogach.
+        const weightMatrix = [
+            [ 4, -3, 2, 2, 2, 2, -3,  4],
+            [-3, -4, -1, -1, -1, -1, -4, -3],
+            [ 2, -1, 1, 0, 0, 1, -1,  2],
+            [ 2, -1, 0, 1, 1, 0, -1,  2],
+            [ 2, -1, 0, 1, 1, 0, -1,  2],
+            [ 2, -1, 1, 0, 0, 1, -1,  2],
+            [-3, -4, -1, -1, -1, -1, -4, -3],
+            [ 4, -3, 2, 2, 2, 2, -3,  4]
+        ];
+    
+        for (let row = 0; row < 8; row++) {
+            for (let col = 0; col < 8; col++) {
+                if (this.board[row][col] === this.currentPlayer) {
+                    positionScore += weightMatrix[row][col];
+                } else if (this.board[row][col] === 3 - this.currentPlayer) {
+                    positionScore -= weightMatrix[row][col];
+                }
+            }
+        }
+        return positionScore;
+    }
+    
 
 
     clone(): ReversiSingleTree {
